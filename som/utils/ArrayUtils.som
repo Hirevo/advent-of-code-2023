@@ -2,17 +2,67 @@
 ArrayUtils = (
     ---------
 
+    any: blk in: array = (
+        1 to: array length do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ ^ true ].
+        ].
+
+        ^ false.
+    )
+
+    all: blk in: array = (
+        1 to: array length do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifFalse: [ ^ false ].
+        ].
+
+        ^ true.
+    )
+
     find: blk in: array = (
-        array do: [ :it |
-            (blk value: it) ifTrue: [ ^ it ].
+        1 to: array length do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ ^ array at: idx ].
         ].
 
         ^ nil.
     )
 
     findIndex: blk in: array = (
-        array doIndexes: [ :idx |
-            (blk value: (array at: idx)) ifTrue: [ ^ idx ].
+        1 to: array length do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ ^ idx ].
+        ].
+
+        ^ nil.
+    )
+
+    findMap: blk in: array = (
+        1 to: array length do: [ :idx |
+            idx := blk value: (array at: idx) with: idx.
+            idx ifNotNil: [ ^ idx ].
+        ].
+
+        ^ nil.
+    )
+
+    findLast: blk in: array = (
+        array length downTo: 1 do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ ^ array at: idx ].
+        ].
+
+        ^ nil.
+    )
+
+    findLastIndex: blk in: array = (
+        array length downTo: 1 do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ ^ idx ].
+        ].
+
+        ^ nil.
+    )
+
+    findLastMap: blk in: array = (
+        array length downTo: 1 do: [ :idx |
+            idx := blk value: (array at: idx) with: idx.
+            idx ifNotNil: [ ^ idx ].
         ].
 
         ^ nil.

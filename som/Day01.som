@@ -1,0 +1,70 @@
+Day01 = (
+    | input digitsTable |
+
+    setup = (
+        input := system loadFile: 'inputs/day01.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        digitsTable := #(
+            '0'    '1'    '2'  '3'     '4'    '5'    '6'   '7'     '8'     '9'
+            'zero' 'one' 'two' 'three' 'four' 'five' 'six' 'seven' 'eight' 'nine'
+        ).
+    )
+
+    part1 = (
+        | answer |
+
+        answer := input inject: 0 into: [ :acc :line |
+            | fst snd |
+
+            1 to: line length do: [ :ch |
+                ch := line charAt: ch.
+                ch isDigits ifTrue: [
+                    fst ifNil: [ fst := ch ].
+                    snd := ch.
+                ].
+            ].
+
+            acc + (fst + snd) asInteger
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer |
+
+        answer := input inject: 0 into: [ :acc :line |
+            | fst snd |
+
+            snd := 1 to: line length.
+
+            fst := ArrayUtils findMap: [ :idx :unused |
+                idx := line substringFrom: idx to: line length.
+                ArrayUtils findIndex: [ :candidate :unused | idx beginsWith: candidate ] in: digitsTable
+            ] in: snd.
+
+            snd := ArrayUtils findLastMap: [ :idx :unused |
+                idx := line substringFrom: idx to: line length.
+                ArrayUtils findIndex: [ :candidate :unused | idx beginsWith: candidate ] in: digitsTable
+            ] in: snd.
+
+            fst := fst - 1 % 10.
+            snd := snd - 1 % 10.
+
+            acc + (fst * 10 + snd)
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)
