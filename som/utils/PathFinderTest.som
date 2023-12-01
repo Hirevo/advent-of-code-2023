@@ -1,0 +1,50 @@
+PathFinderTest = (
+    run: args = (
+        | input map start end path |
+
+        map := MyHashMap new: 1000.
+
+        input := system loadFile: './graph.txt'.
+        input ifNil: [ self error: 'invalid input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :line | line length = 0 ].
+        input := input asArray.
+
+        input do: [ :line |
+            | parts dist a b |
+            parts := line split: ' -> '.
+            dist := parts at: 2.
+            dist := dist asInteger.
+            a := parts at: 1.
+            b := parts at: 3.
+            a := map entry: a asSymbol.
+            b := map entry: b asSymbol.
+            a value ifNil: [ a value: (GraphNode new: (parts at: 1)) ].
+            b value ifNil: [ b value: (GraphNode new: (parts at: 3)) ].
+            a value addNeighbor: (RevRankedValue new: b value score: dist).
+            b value addNeighbor: (RevRankedValue new: a value score: dist).
+        ].
+
+        start := map at: #a.
+        end := map at: #j.
+
+        path := PathFinder dijkstra: start
+                           through: [ :node | node neighbors ]
+                           towards: [ :node | node name = #j ].
+
+        path ifNil: [
+            'no path could be found' println.
+        ] ifNotNil: [
+            | reversed |
+            reversed := Array new: path length.
+            path doIndexes: [ :idx |
+                reversed at: (path length - idx + 1) put: (path at: idx).
+            ].
+            path := reversed.
+            path := path collect: [ :it | it name asString ].
+            path := path join: ' -> '.
+            path println.
+        ].
+    )
+)

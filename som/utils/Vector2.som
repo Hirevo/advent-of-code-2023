@@ -1,0 +1,91 @@
+Vector2 = (
+    | x y |
+
+    x = ( ^ x )
+    y = ( ^ y )
+
+    x: newX = ( x := newX )
+    y: newY = ( y := newY )
+
+    = other = (
+        ^ x = other x and: [ y = other y ].
+    )
+
+    + other = (
+        ^ self class
+            x: x + other x
+            y: y + other y
+    )
+
+    - other = (
+        ^ self class
+            x: x - other x
+            y: y - other y
+    )
+
+    scalarAdd: scalar = (
+        ^ self class
+            x: x + scalar
+            y: y + scalar
+    )
+
+    scalarSub: scalar = (
+        ^ self class
+            x: x - scalar
+            y: y - scalar
+    )
+
+    scalarMult: scalar = (
+        ^ self class
+            x: x * scalar
+            y: y * scalar
+    )
+
+    scalarDiv: scalar = (
+        ^ self class
+            x: x / scalar
+            y: y / scalar
+    )
+
+    length = (
+        ^ ((x * x) + (y * y)) sqrt.
+    )
+
+    normalize = (
+        ^ self scalarDiv: self length.
+    )
+
+    manhattanDistance: other = (
+        ^ (other x - x) abs + (other y - y) abs
+    )
+
+    hashcode = (
+        ^ 524287 * x hashcode + y hashcode.
+    )
+
+    clone = (
+        ^ self class x: x y: y.
+    )
+
+    asString = (
+        ^ '(' + x + ', ' + y + ')'.
+    )
+
+    print = (
+        self asString print.
+    )
+
+    println = (
+        self asString println.
+    )
+
+    -----------
+
+    x: x y: y = (
+        | point |
+        point := self new.
+        point x: x.
+        point y: y.
+        ^ point.
+    )
+)

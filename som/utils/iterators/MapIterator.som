@@ -1,0 +1,23 @@
+MapIterator = Iterator (
+    | iter blk |
+
+    next = (
+        | value |
+
+        value := iter next.
+        value ifNotNil: [ ^ blk value: value ].
+
+        ^ nil.
+    )
+
+    initialize: newIter with: newBlk = (
+        iter := newIter.
+        blk := newBlk.
+    )
+
+    -------------
+
+    new: iter with: blk = (
+        ^ self new initialize: iter with: blk
+    )
+)

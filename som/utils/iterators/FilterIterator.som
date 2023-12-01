@@ -1,0 +1,27 @@
+FilterIterator = Iterator (
+    | iter blk |
+
+    next = (
+        | value |
+
+        [ value isNil ] whileTrue: [
+            value := iter next.
+            value ifNil: [ ^ nil ].
+            (blk value: value) ifTrue: [ ^ value ].
+            value := nil.
+        ].
+
+        ^ nil.
+    )
+
+    initialize: newIter with: newBlk = (
+        iter := newIter.
+        blk := newBlk.
+    )
+
+    -------------
+
+    new: iter with: blk = (
+        ^ self new initialize: iter with: blk
+    )
+)

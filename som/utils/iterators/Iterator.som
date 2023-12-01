@@ -1,0 +1,76 @@
+Iterator = (
+    next = ( ^ nil )
+
+    map: blk = ( ^ MapIterator new: self with: blk )
+    filter: blk = ( ^ FilterIterator new: self with: blk )
+    flatMap: blk = ( ^ FlatMapIterator new: self with: blk )
+
+    flatten = ( ^ FlattenIterator new: self )
+
+    forEach: blk = (
+        | value |
+
+        value := self next.
+        [ value notNil ] whileTrue: [
+            blk value: value.
+            value := self next.
+        ].
+
+        ^ nil.
+    )
+
+    count = (
+        | count |
+
+        count := 0.
+        [ self next notNil ] whileTrue: [
+            count := count + 1
+        ].
+
+        ^ count.
+    )
+
+    reduce: blk = (
+        | acc head |
+
+        acc := self next.
+        acc ifNil: [ ^ nil ].
+
+        head := self next.
+        [ head notNil ] whileTrue: [
+            acc := blk value: acc with: head.
+            head := self next.
+        ].
+
+        ^ acc.
+    )
+
+    fold: init with: blk = (
+        | acc head |
+
+        acc := init.
+        head := self next.
+        [ head notNil ] whileTrue: [
+            acc := blk value: acc with: head.
+            head := self next.
+        ].
+
+        ^ acc.
+    )
+
+    collect = (
+        | vector value |
+
+        vector := Vector new.
+        value := self next.
+
+        [ value notNil ] whileTrue: [
+            vector append: value.
+            value := self next.
+        ].
+
+        ^ vector asArray.
+    )
+
+    collect: class = ( ^ class fromIter: self )
+)

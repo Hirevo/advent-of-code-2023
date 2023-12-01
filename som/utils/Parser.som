@@ -1,0 +1,250 @@
+Parser = (
+    | block |
+
+    block = ( ^ block )
+    block: blk = ( block := blk )
+
+    apply: input = ( ^ block value: input )
+
+    <*> other = (
+        ^ Parser new: [ :input | | fstResult sndResult |
+            fstResult := self apply: input.
+            fstResult error ifNil: [
+                sndResult := other apply: fstResult input.
+                sndResult error ifNil: [
+                    ParseResult new: (MyPair fst: fstResult output snd: sndResult output) remaining: sndResult input
+                ] ifNotNil: sndResult.
+            ] ifNotNil: fstResult.
+        ].
+    )
+
+    *> other = (
+        ^ Parser new: [ :input | | fstResult sndResult |
+            fstResult := self apply: input.
+            fstResult error
+                ifNil: [ other apply: fstResult input ]
+                ifNotNil: fstResult.
+        ].
+    )
+
+    <* other = (
+        ^ Parser new: [ :input | | fstResult sndResult |
+            fstResult := self apply: input.
+            fstResult error ifNil: [
+                sndResult := other apply: fstResult input.
+                sndResult error
+                    ifNil: [ sndResult output: fstResult output ]
+                    ifNotNil: sndResult.
+            ] ifNotNil: fstResult.
+        ].
+    )
+
+    <|> other = (
+        ^ Parser new: [ :input | | result |
+            result := self apply: input.
+            result error
+                ifNil: result
+                ifNotNil: [ other apply: input ].
+        ]
+    )
+
+    map: func = (
+        ^ Parser new: [ :input | | result |
+            result := self apply: input.
+            result error
+                ifNil: [ result output: (func value: result output) ]
+                ifNotNil: result.
+        ]
+    )
+
+    filter: predicate = (
+        ^ Parser new: [ :input | | result |
+            result := self apply: input.
+            result error
+                ifNil: [
+                    (predicate value: result output)
+                        ifTrue: result
+                        ifFalse: [
+                            " TODO: improve error message "
+                            ParseResult error: 'failed filter predicate' remaining: input.
+                        ].
+                ]
+                ifNotNil: result.
+        ]
+    )
+
+    many = (
+        ^ Parser new: [ :input | | outputs |
+            outputs := Vector new.
+            [ | result |
+                result := self apply: input.
+                result error ifNil: [
+                    input := result input.
+                    outputs append: result output.
+                ].
+                result error isNil.
+            ] whileTrue: nil.
+            ParseResult new: outputs asArray remaining: input.
+        ]
+    )
+
+    some = (
+        ^ Parser new: [ :input | | outputs result |
+            outputs := Vector new.
+            result := self apply: input.
+            result error ifNil: [
+                input := result input.
+                outputs append: result output.
+                [   result := self apply: input.
+                    result error ifNil: [
+                        input := result input.
+                        outputs append: result output.
+                    ].
+                    result error isNil.
+                ] whileTrue: nil.
+                ParseResult new: outputs asArray remaining: input.
+            ] ifNotNil: result.
+        ]
+    )
+
+    between: open and: close = (
+        ^ open *> self <* close
+    )
+
+    optional = (
+        ^ Parser new: [ :input | | result |
+            result := self apply: input.
+            result error
+                ifNil: result
+                ifNotNil: [ ParseResult new: nil remaining: result input ]
+        ]
+    )
+
+    fallback: default = (
+        ^ Parser new: [ :input | | result |
+            result := self apply: input.
+            result error
+                ifNil: result
+                ifNotNil: [ ParseResult new: default value remaining: result input ]
+        ]
+    )
+
+    separatedBy: separator = ( | tail |
+        tail := separator *> self.
+        ^ Parser new: [ :input | | outputs result |
+            outputs := Vector new.
+            result := self apply: input.
+            result error ifNil: [
+                input := result input.
+                outputs append: result output.
+                [ | result |
+                    result := tail apply: input.
+                    result error ifNil: [
+                        input := result input.
+                        outputs append: result output.
+                    ].
+                    result error isNil.
+                ] whileTrue: nil.
+                ParseResult new: outputs asArray remaining: input.
+            ] ifNotNil: [
+                ParseResult new: #() remaining: input.
+            ]
+        ]
+    )
+
+    separatedBy1: separator = ( | tail |
+        tail := separator *> self.
+        ^ Parser new: [ :input | | outputs result |
+            outputs := Vector new.
+            result := self apply: input.
+            result error ifNil: [
+                input := result input.
+                outputs append: result output.
+                [ | result |
+                    result := tail apply: input.
+                    result error ifNil: [
+                        input := result input.
+                        outputs append: result output.
+                    ].
+                    result error isNil.
+                ] whileTrue: nil.
+                ParseResult new: outputs asArray remaining: input.
+            ] ifNotNil: result.
+        ]
+    )
+
+    --------------
+
+    new: blk = (
+        ^ self new block: blk
+    )
+
+    anything = (
+        ^ Parser new: [ :input | | head |
+            head := input peekLast.
+            head ifNil: [
+                ParseResult error: 'expected anything, but got EOF' remaining: input
+            ] ifNotNil: [
+                ParseResult new: head remaining: input + 1.
+            ]
+        ]
+    )
+
+    just: value = (
+        ^ Parser new: [ :input | | head |
+            head := input peekLast.
+            head ifNil: [
+                ParseResult error: 'expected `' + value + '`, but got EOF' remaining: input
+            ] ifNotNil: [
+                head = value
+                    ifTrue: [ ParseResult new: head remaining: input + 1 ]
+                    ifFalse: [ ParseResult error: 'expected `' + value + '`, but got `' + head + '`' remaining: input ]
+            ]
+        ]
+    )
+
+    justAll: values = (
+        ^ Parser new: [ :input | | head |
+            head := input peek: values length.
+            head ifNil: [
+                ParseResult error: 'expected `' + values + '`, but got `' + input text + '`' remaining: input
+            ] ifNotNil: [
+                head = values ifTrue: [
+                    ParseResult new: head remaining: input + values length
+                ] ifFalse: [
+                    ParseResult error: 'expected `' + values + '`, but got `' + head + '`' remaining: input
+                ].
+            ].
+        ]
+    )
+
+    validate: predicate = (
+        ^ Parser new: [ :input | | head |
+            head := input peekLast.
+            head ifNil: [
+                ParseResult error: 'expected something, but got EOF' remaining: input
+            ] ifNotNil: [
+                (predicate value: head)
+                    ifTrue: [ ParseResult new: head remaining: input + 1 ]
+                    ifFalse: [ ParseResult error: 'failed predicate (validate)' remaining: input ]
+            ]
+        ]
+    )
+
+    lazy: blk = (
+        ^ Parser new: [ :input | blk value apply: input ]
+    )
+
+    unsignedInteger = (
+        ^ (Parser validate: [ :head | head isDigits ]) some map: [ :output |
+            output inject: 0 into: [ :acc :it | acc * 10 + it asInteger ]
+        ].
+    )
+
+    signedInteger = (
+        ^ ((Parser just: '-') optional <*> Parser unsignedInteger) map: [ :pair |
+            pair fst ifNil: pair snd ifNotNil: [ pair snd negated ]
+        ].
+    )
+
+)
