@@ -30,9 +30,9 @@ mod day01;
 // mod day23;
 // mod day24;
 // mod day25;
+mod interval;
 mod timing;
 mod vector;
-mod interval;
 
 pub type Error = Report;
 

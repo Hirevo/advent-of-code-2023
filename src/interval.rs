@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::fmt::{Display, self};
+use std::fmt::{self, Display};
 
 use num_traits::PrimInt;
 

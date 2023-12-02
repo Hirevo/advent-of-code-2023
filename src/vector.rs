@@ -135,7 +135,11 @@ where
     T: Copy + Sum + Sub<Output = T> + Signed,
 {
     pub fn manhattan_distance(&self, other: Self) -> T {
-        self.0.into_iter().zip(other.0.into_iter()).map(|(a, b)| (b - a).abs()).sum::<T>()
+        self.0
+            .into_iter()
+            .zip(other.0.into_iter())
+            .map(|(a, b)| (b - a).abs())
+            .sum::<T>()
     }
 }
 
