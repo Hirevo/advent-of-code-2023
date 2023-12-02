@@ -1,0 +1,77 @@
+Day02 = (
+    | input |
+
+    setup = (
+        | parser |
+
+        input := system loadFile: 'inputs/day02.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        " parser for a single word (eg. `blue`) "
+        parser := (Parser validate: [ :head | head isLetters ]) some map: [ :letters |
+            (letters inject: '' into: [ :acc :it | acc + it ]) asSymbol
+        ].
+
+        " parser for a group (eg. `3 blue`) "
+        parser := Parser unsignedInteger <* (Parser just: ' ') <*> parser.
+
+        " parser for a round (eg. `3 blue, 4 red`) "
+        parser := parser separatedBy1: (Parser justAll: ', ').
+        parser := parser map: [ :groups |
+            | round |
+            round := MyHashMap new.
+            groups do: [ :pair | round at: pair snd put: pair fst ].
+            round
+        ].
+
+        " parser for a set collection (eg. `3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green`) "
+        parser := parser separatedBy1: (Parser justAll: '; ').
+
+        " parser for a whole game (eg. `Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green`) "
+        parser := (Parser justAll: 'Game ') *> Parser unsignedInteger <* (Parser justAll: ': ') <*> parser.
+        parser := parser map: [ :pair | Day02Game id: pair fst rounds: pair snd ].
+
+        input := input collect: [ :line |
+            | result |
+            result := parser apply: (ParseInput new: line).
+            result error
+                ifNil: [ result output ]
+                ifNotNil: [ self error: result error ]
+        ].
+    )
+
+    part1 = (
+        | answer bag |
+
+        bag := MyHashMap new.
+        bag at: #red put: 12.
+        bag at: #green put: 13.
+        bag at: #blue put: 14.
+
+        answer := input inject: 0 into: [ :acc :game |
+            (game isPossible: bag)
+                ifTrue: [ acc + game id ]
+                ifFalse: acc
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer |
+
+        answer := input inject: 0 into: [ :acc :game | acc + game power ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

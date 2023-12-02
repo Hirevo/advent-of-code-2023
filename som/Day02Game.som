@@ -1,0 +1,50 @@
+Day02Game = (
+    | id rounds |
+
+    id = ( ^ id )
+    rounds = ( ^ rounds )
+
+    id: newId = ( id := newId )
+    rounds: newRounds = ( rounds := newRounds )
+
+    isPossible: bag = (
+        ^ ArrayUtils all: [ :round :valid |
+            valid := true.
+            round do: [ :entry |
+                | allowed |
+                allowed := bag at: entry key.
+                allowed isNil || [ entry value > allowed ] ifTrue: [
+                    valid := false.
+                ].
+            ].
+            valid
+        ] in: rounds.
+    )
+
+    power = (
+        | required |
+        required := MyHashMap new.
+        rounds do: [ :round :unused |
+            round do: [ :entry |
+                | found |
+                found := required entry: entry key.
+                found value ifNil: [
+                    found value: entry value
+                ] ifNotNil: [
+                    found value: (found value max: entry value).
+                ].
+            ].
+        ].
+        ^ required values inject: 1 into: [ :acc :it | acc * it ].
+    )
+
+    -----------
+
+    id: id rounds: rounds = (
+        | game |
+        game := self new.
+        game id: id.
+        game rounds: rounds.
+        ^ game.
+    )
+)

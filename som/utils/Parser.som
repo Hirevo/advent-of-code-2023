@@ -246,5 +246,4 @@ Parser = (
             pair fst ifNil: pair snd ifNotNil: [ pair snd negated ]
         ].
     )
-
 )

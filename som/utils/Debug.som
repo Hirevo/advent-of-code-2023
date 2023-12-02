@@ -46,6 +46,14 @@ Debug = (
         ')' print.
     )
 
+    myPair: pair = (
+        '(' print.
+        self any: pair fst.
+        ', ' print.
+        self any: pair snd.
+        ')' print.
+    )
+
     any: value = (
         value class = Integer ifTrue: [ ^ self integer: value ].
         value class = Double ifTrue: [ ^ self double: value ].
@@ -55,6 +63,7 @@ Debug = (
         value class = Set ifTrue: [ ^ self set: value ].
         value class = Vector ifTrue: [ ^ self vector: value ].
         value class = Nil ifTrue: [ ^ self nil ].
+        value class = MyPair ifTrue: [ ^ self myPair: value ].
         value print.
     )
 
