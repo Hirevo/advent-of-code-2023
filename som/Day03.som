@@ -1,0 +1,105 @@
+Day03 = (
+    | numbers symbols |
+
+    setup = (
+        | input |
+        input := system loadFile: 'inputs/day03.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        " Pseudo-type: `Vector<MyPair<Integer, MyPair<Vector2, Vector2>>>` "
+        numbers := Vector new.
+        " Pseudo-type: `Vector<MyPair<Symbol, Vector2>>` "
+        symbols := Vector new.
+
+        " there has to be a better way to parse through the input ... "
+        1 to: input length do: [ :y |
+            | row x |
+            row := input at: y.
+            x := 1.
+            [ x <= row length ] whileTrue: [
+                | buffer position |
+                buffer := row charAt: x.
+                position := Vector2 x: x y: y.
+                buffer isDigits ifTrue: [
+                    | continue |
+                    x := x + 1.
+                    continue := true.
+                    [ continue && [ x <= row length ] ] whileTrue: [
+                        | next |
+                        next := row charAt: x.
+                        next isDigits ifTrue: [
+                            buffer := buffer + next.
+                            x := x + 1.
+                        ] ifFalse: [
+                            continue := false.
+                        ].
+                    ].
+                    position := MyPair fst: position snd: (Vector2 x: position x + buffer length - 1 y: y).
+                    numbers append: (MyPair fst: buffer asInteger snd: position).
+                ] ifFalse: [
+                    buffer = '.' ifFalse: [
+                        symbols append: (MyPair fst: buffer asSymbol snd: position).
+                    ].
+                    x := x + 1.
+                ].
+            ].
+        ].
+
+        numbers := numbers asArray.
+        symbols := symbols asArray.
+    )
+
+    part1 = (
+        | answer |
+
+        answer := numbers inject: 0 into: [ :acc :number |
+            | neighbors |
+            neighbors := Rectangle
+                x: (Interval lo: number snd fst x - 1 hi: number snd snd x + 1)
+                y: (Interval lo: number snd fst y - 1 hi: number snd snd y + 1).
+
+            neighbors := ArrayUtils any: [ :symbol :unused |
+                neighbors containsPoint: symbol snd.
+            ] in: symbols.
+
+            neighbors ifTrue: [ acc + number fst ] ifFalse: acc.
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+         | answer |
+
+        answer := symbols inject: 0 into: [ :acc :symbol |
+            symbol fst = #'*' ifTrue: [
+                | adjacent |
+                adjacent := numbers select: [ :number |
+                    number := Rectangle
+                        x: (Interval lo: number snd fst x - 1 hi: number snd snd x + 1)
+                        y: (Interval lo: number snd fst y - 1 hi: number snd snd y + 1).
+
+                    number containsPoint: symbol snd.
+                ].
+                adjacent := adjacent asArray.
+
+                adjacent length = 2 ifTrue: [
+                    adjacent := adjacent inject: 1 into: [ :acc :number | acc * number fst ].
+                    acc + adjacent.
+                ] ifFalse: acc.
+            ] ifFalse: acc.
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

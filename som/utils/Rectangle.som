@@ -1,0 +1,118 @@
+" An axis-aligned rectangle "
+" (`x` and `y` are meant to be instances of `Interval`) "
+Rectangle = (
+    | x y |
+
+    x = ( ^ x )
+    y = ( ^ y )
+
+    x: newX = ( x := newX )
+    y: newY = ( y := newY )
+
+    lo = ( ^ Vector2 x: x lo y: y lo )
+    hi = ( ^ Vector2 x: x hi y: y hi )
+
+    center = ( ^ Vector2 x: x center y: y center )
+
+    = other = (
+        ^ x = other x and: [ y = other y ].
+    )
+
+    " returns whether the specified point is contained within this rectangle "
+    containsPoint: point = (
+	    ^ (x containsScalar: point x) and: [ y containsScalar: point y ].
+    )
+
+    " returns whether the specified point is strictly contained within this rectangle "
+    interiorContainsPoint: point = (
+	    ^ (x interiorContainsScalar: point x) and: [ y interiorContains: point y ].
+    )
+
+    " returns whether the specified rectangle is contained within this rectangle "
+    containsRectangle: other = (
+	    ^ (x containsInterval: other x) and: [ y containsInterval: other y ].
+    )
+
+    " returns whether the specified rectangle is strictly contained within this rectangle "
+    interiorContainsRectangle: other = (
+	    ^ (x interiorContainsInterval: other x) and: [ y interiorContainsInterval: other y ].
+    )
+
+    " returns whether the specified rectangle is intersecting with this rectangle "
+    intersects: other = (
+	    ^ (x intersects: other x) and: [ y intersects: other y ].
+    )
+
+    " returns whether the specified rectangle is strictly intersecting with this rectangle "
+    interiorIntersects: other = (
+	    ^ (x interiorIntersects: other x) and: [ y interiorIntersects: other y ].
+    )
+
+    " returns the common intersection rectangle between the two rectangles "
+    intersection: other = (
+        | xx yy |
+	    xx := x intersection: other x.
+	    yy := y intersection: other y.
+
+	    (xx isEmpty or: [ yy isEmpty ]) ifTrue: [
+		    ^ self class empty.
+        ].
+
+	    ^ self class x: xx y: yy.
+    )
+
+    " returns the smallest rectangle that contains both rectangles "
+    union: other = (
+	    ^ self class
+            x: (x union: other x)
+            y: (y union: other y)
+    )
+
+    " returns the rectangle expanded so that it contains the specified point "
+    addPoint: point = (
+	    ^ self class
+            x: (x addPoint: point x)
+            y: (y addPoint: point y)
+    )
+
+    " returns the rectangle expanded so that it contains the specified rectangle "
+    addRect: other = (
+	    ^ self class
+            x: (x union: other x)
+            y: (y union: other y)
+    )
+
+    hashcode = (
+        ^ 524287 * x hashcode + y hashcode.
+    )
+
+    clone = (
+        ^ self class x: x y: y.
+    )
+
+    asString = (
+        ^ '(' + x + ', ' + y + ')'.
+    )
+
+    print = (
+        self asString print.
+    )
+
+    println = (
+        self asString println.
+    )
+
+    -----------
+
+    empty = (
+        ^ self x: Interval empty y: Interval empty.
+    )
+
+    x: x y: y = (
+        | rectangle |
+        rectangle := self new.
+        rectangle x: x.
+        rectangle y: y.
+        ^ rectangle.
+    )
+)

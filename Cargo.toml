@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 chumsky = "0.8.0"
 color-eyre = "0.6.2"
-num-traits = "0.2.15"
+geo = "0.27.0"
 pathfinding = "4.0.0"
 rayon = "1.6.1"

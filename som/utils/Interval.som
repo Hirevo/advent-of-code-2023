@@ -1,0 +1,148 @@
+" A one-dimensional interval "
+Interval = (
+    | lo hi |
+
+    lo = ( ^ lo )
+    hi = ( ^ hi )
+
+    lo: newLo = ( lo := newLo )
+    hi: newHi = ( hi := newHi )
+
+    isEmpty = ( ^ lo > hi )
+
+    = other = (
+        self isEmpty ifTrue: [ ^ other isEmpty ].
+        ^ lo = other lo and: [ hi = other hi ].
+    )
+
+    scalarAdd: scalar = (
+        ^ self class
+            lo: lo + scalar
+            hi: hi + scalar
+    )
+
+    scalarSub: scalar = (
+        ^ self class
+            lo: lo - scalar
+            hi: hi - scalar
+    )
+
+    scalarMult: scalar = (
+        ^ self class
+            lo: lo * scalar
+            hi: hi * scalar
+    )
+
+    scalarDiv: scalar = (
+        ^ self class
+            lo: lo / scalar
+            hi: hi / scalar
+    )
+
+    length = (
+        self isEmpty ifTrue: [ ^ 0 ].
+        ^ ((lo * lo) + (hi * hi)) sqrt.
+    )
+
+    " returns the center point of the interval "
+    center = (
+        ^ (lo + hi * 0.5) asInteger
+    )
+
+    " returns whether the specified scalar value is contained within this interval "
+    containsScalar: scalar = (
+        ^ lo <= scalar and: [ scalar <= hi ].
+    )
+
+    " returns whether the specified interval is contained within this interval "
+    containsInterval: other = (
+        other isEmpty ifTrue: [ ^ true ].
+	    ^ lo <= other lo and: [ other hi <= hi ].
+    )
+
+    " returns whether the specified scalar value is strictly contained within this interval "
+    interiorContainsScalar: scalar = (
+	    ^ lo < p and: [ p < hi ]
+    )
+
+    " returns whether the specified interval is strictly contained within this interval "
+    interiorContainsInterval: other = (
+        other isEmpty ifTrue: [ ^ true ].
+	    ^ lo < other lo and: [ other hi < hi ].
+    )
+
+    " returns whether the specified interval is intersecting with this interval "
+    intersects: other = (
+	    lo <= other lo ifTrue: [
+		    ^ other lo <= hi and: [ other lo <= other hi ].
+        ].
+	    ^ lo <= other hi and: [ lo <= hi ].
+    )
+
+    " returns whether the specified interval is strictly intersecting with this interval "
+    interiorIntersects: other = (
+	    ^ other lo < hi && [ lo < other hi && [ lo < hi && [ other lo <= other hi ] ] ]
+    )
+
+    " returns the common intersection interval between the two intervals "
+    intersection: other = (
+	    ^ self class
+		    lo: (lo max: other lo)
+		    hi: (hi min: other hi)
+    )
+
+    " returns the smallest interval that contains both intervals "
+    union: other = (
+	    self isEmpty ifTrue: [ ^ other clone ].
+	    other isEmpty ifTrue: [ ^ self clone ].
+	    ^ self class
+            lo: (lo min: other lo)
+            hi: (hi max: other hi)
+    )
+
+    " returns the interval expanded so that it contains the specified scalar "
+    addPoint: scalar = (
+	    self isEmpty ifTrue: [ ^ self class fromScalar: scalar ].
+	    scalar < lo ifTrue: [ ^ self class lo: scalar hi: hi ].
+	    scalar > hi ifTrue: [ ^ self class lo: lo hi: scalar ].
+	    ^ self clone.
+    )
+
+    hashcode = (
+        ^ 524287 * lo hashcode + hi hashcode.
+    )
+
+    clone = (
+        ^ self class lo: lo hi: hi.
+    )
+
+    asString = (
+        ^ '[' + lo + ', ' + hi + ']'.
+    )
+
+    print = (
+        self asString print.
+    )
+
+    println = (
+        self asString println.
+    )
+
+    -----------
+
+    empty = (
+        ^ self lo: 1 hi: 0.
+    )
+
+    fromScalar: scalar = (
+        ^ self lo: scalar hi: scalar.
+    )
+
+    lo: lo hi: hi = (
+        | interval |
+        interval := self new.
+        interval lo: lo.
+        interval hi: hi.
+        ^ interval.
+    )
+)
