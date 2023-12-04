@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use chumsky::error::Simple;
-use chumsky::primitive::just;
+use chumsky::primitive::{end, just};
 use chumsky::{text, Parser};
 
 use crate::measured;
@@ -92,6 +92,8 @@ fn parser() -> impl Parser<char, InputType, Error = Simple<char>> {
         )
         .map(|(id, rounds)| Game { id, rounds })
         .separated_by(text::newline())
+        .allow_trailing()
+        .then_ignore(end())
 }
 
 pub fn run() -> Result<(), Error> {
