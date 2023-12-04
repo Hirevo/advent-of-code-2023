@@ -1,0 +1,28 @@
+Day04Card = (
+    | id winning numbers |
+
+    id = ( ^ id )
+    winning = ( ^ winning )
+    numbers = ( ^ numbers )
+
+    id: newId = ( id := newId )
+    winning: newWinning = ( winning := newWinning )
+    numbers: newNumbers = ( numbers := newNumbers )
+
+    score = (
+        ^ numbers inject: 0 into: [ :count :number |
+            (winning containsKey: number) ifTrue: [ count + 1 ] ifFalse: [ count ]
+        ].
+    )
+
+    -----------
+
+    id: id winning: winning numbers: numbers = (
+        | game |
+        game := self new.
+        game id: id.
+        game winning: winning.
+        game numbers: numbers.
+        ^ game.
+    )
+)

@@ -111,6 +111,10 @@ Parser = (
         ^ open *> self <* close
     )
 
+    paddedBy: padding = (
+        ^ padding *> self <* padding
+    )
+
     optional = (
         ^ Parser new: [ :input | | result |
             result := self apply: input.

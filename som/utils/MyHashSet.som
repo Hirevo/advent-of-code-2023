@@ -50,6 +50,10 @@ MyHashSet = (
         ^ true.
     )
 
+    insertAll: collection = (
+        collection do: [ :key | self insert: key ].
+    )
+
     " removes the given key from the set "
     remove: key = (
         | hash head next |
@@ -242,6 +246,10 @@ MyHashSet = (
     )
 
     --------------
+
+    fromCollection: collection = (
+        ^ self new insertAll: collection.
+    )
 
     new = ( ^ self new: 16 )
     new: capacity = (
