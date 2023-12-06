@@ -4,14 +4,26 @@ DayXX = (
     setup = (
         input := system loadFile: 'inputs/dayXX.txt'.
         input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
     )
 
     part1 = (
-        self error: 'dayXX>>#part1 unimplemented'
+        | answer |
+
+        self error: 'dayXX>>#part1 unimplemented'.
+
+        ('part1: ' + answer) println.
     )
 
     part2 = (
-        self error: 'dayXX>>#part2 unimplemented'
+        | answer |
+
+        self error: 'dayXX>>#part2 unimplemented'.
+
+        ('part2: ' + answer) println.
     )
 
     run: args = (
