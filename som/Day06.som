@@ -1,0 +1,88 @@
+Day06 = (
+    | times distances |
+
+    setup = (
+        | input parser |
+        input := system loadFile: 'inputs/day06.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        parser := (
+            (Parser justAll: 'Time:') *> (Parser just: ' ') some *> (
+                Parser unsignedInteger separatedBy1: (Parser just: ' ') some
+            )
+        ) <* (Parser just: '\n') <*> (
+            (Parser justAll: 'Distance:') *> (Parser just: ' ') some *> (
+                Parser unsignedInteger separatedBy1: (Parser just: ' ') some
+            )
+        ).
+
+        input := parser apply: (ParseInput new: input).
+        input error ifNil: [
+            times := input output fst.
+            distances := input output snd.
+        ] ifNotNil: [
+            self error: input error.
+        ].
+    )
+
+    " efficiently finds the transition point using binary search "
+    binarySearch: block from: start to: end = (
+        | mid |
+        [ mid := (end + start) / 2. mid > 0 ] whileTrue: [
+            | output |
+            output := block value: mid.
+            output <> (block value: mid - 1) ifTrue: [ ^ mid ].
+            output ifTrue: [
+                end := mid.
+            ] ifFalse: [
+                start := mid.
+            ].
+        ].
+
+        ^ nil.
+    )
+
+    " returns the number of ways to beat the given distance in the given time "
+    countWays: time distance: distance = (
+        | found |
+        found := self binarySearch: [ :candidate |
+            time - candidate * candidate >= distance.
+        ] from: 1 to: time.
+
+        time - found * found = distance ifTrue: [
+            ^ time - (found * 2) - 1
+        ] ifFalse: [
+            ^ time - (found * 2) + 1
+        ].
+    )
+
+    part1 = (
+        | answer |
+
+        answer := 1.
+        1 to: times length do: [ :idx |
+            answer := answer * (
+                self countWays: (times at: idx) distance: (distances at: idx)
+            ).
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer time distance |
+
+        time := (times inject: '' into: [ :acc :it | acc + it ]) asInteger.
+        distance := (distances inject: '' into: [ :acc :it | acc + it ]) asInteger.
+
+        answer := self countWays: time distance: distance.
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)
