@@ -76,7 +76,7 @@ fn parser() -> impl Parser<char, InputType, Error = Simple<char>> {
         .delimited_by(just("Card"), just(':'))
         .then(
             numbers_list
-                .map(|values| values.into_iter().collect())
+                .collect()
                 .then_ignore(just('|'))
                 .then(numbers_list),
         )
