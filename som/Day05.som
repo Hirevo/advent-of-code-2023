@@ -1,0 +1,194 @@
+Day05 = (
+    | seeds maps |
+
+    setup = (
+        | input seedsParser wordParser parser |
+        input := system loadFile: 'inputs/day05.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        " parser for a seeds list (eg: `seeds: 72 45 21`) "
+        seedsParser := (Parser justAll: 'seeds: ') *> (
+            Parser unsignedInteger separatedBy1: (Parser just: ' ')
+        ).
+
+        " parser for a word (eg: `soil`) "
+        wordParser := (
+            Parser validate: [ :ch | ch isLetters ]
+        ) some map: [ :chars | chars inject: #'' into: [ :acc :ch | acc + ch ] ].
+
+        " parser for a range (eg: `25 52 10`) "
+        parser := (
+            Parser unsignedInteger <* (Parser just: ' ')
+                <*> Parser unsignedInteger <* (Parser just: ' ')
+                <*> Parser unsignedInteger
+        ) map: [ :output |
+            | src dst len |
+            src := output fst snd.
+            dst := output fst fst.
+            len := output snd.
+
+            src := Interval lo: src hi: src + len - 1.
+            dst := Interval lo: dst hi: dst + len - 1.
+
+            MyPair fst: src snd: dst.
+        ].
+
+        " parser for a map declaration "
+        parser := (
+            wordParser <* (Parser justAll: '-to-') <*> wordParser <* (Parser justAll: ' map:')
+        ) <* (Parser just: '\n') <*> (
+            parser separatedBy1: (Parser just: '\n')
+        ).
+
+        " parser for the whole input "
+        parser := seedsParser <* (Parser justAll: '\n\n')
+            <*> (parser separatedBy1: (Parser justAll: '\n\n')).
+
+        input := parser apply: (ParseInput new: input).
+        input error ifNil: [
+            seeds := input output fst.
+            maps := input output snd.
+            maps do: [ :map |
+                Sorter quicksort: map snd with: [ :a :b | a fst lo - b fst lo ].
+            ].
+        ] ifNotNil: [
+            self error: input error.
+        ].
+    )
+
+    mapScalar: value from: label = (
+        | map |
+        map := ArrayUtils find: [ :map :unused | map fst fst = label ] in: maps.
+        map ifNil: [ ^ nil ].
+
+        label := map fst snd.
+        map snd do: [ :range |
+            | src dst |
+            src := range fst.
+            dst := range snd.
+            (src containsScalar: value) ifTrue: [
+                value := value - src lo + dst lo.
+                ^ MyPair fst: value snd: label.
+            ].
+        ].
+
+        ^ MyPair fst: value snd: label.
+    )
+
+    mapInterval: interval from: label = (
+        | map output |
+        map := ArrayUtils find: [ :map :unused | map fst fst = label ] in: maps.
+        map ifNil: [ ^ nil ].
+
+        output := Vector new.
+
+        label := map fst snd.
+        map snd do: [ :map |
+            | src dst section |
+            src := map fst.
+            dst := map snd.
+            (interval containsScalar: src lo - 1) ifTrue: [
+                section := Interval lo: interval lo hi: src lo - 1.
+                output append: section.
+                interval := Interval lo: src lo hi: interval hi.
+            ].
+            section := interval intersection: src.
+            section isEmpty ifFalse: [
+                output append: (
+                    Interval
+                        lo: section lo - src lo + dst lo
+                        hi: section hi - src lo + dst lo
+                ).
+                interval := Interval lo: section hi + 1 hi: interval hi.
+                interval isEmpty ifTrue: [
+                    ^ MyPair fst: output asArray snd: label.
+                ].
+            ].
+        ].
+
+        output append: interval clone.
+        ^ MyPair fst: output asArray snd: label.
+    )
+
+    simplifyIntervals: intervals = (
+        | merged current |
+
+        intervals length < 2 ifTrue: [ ^ intervals ].
+        Sorter quicksort: intervals with: [ :a :b | a lo - b lo ].
+
+        current := intervals at: 1.
+        merged := Vector new.
+
+        2 to: intervals length do: [ :it |
+            it := intervals at: it.
+            it lo <= current hi ifTrue: [
+                current := current union: it.
+            ] ifFalse: [
+                merged append: current.
+                current := it.
+            ].
+        ].
+
+        current ifNotNil: [ merged append: current ].
+
+        ^ merged asArray.
+    )
+
+    part1 = (
+        | answer |
+
+        answer := seeds inject: nil into: [ :acc :value |
+            | label |
+            label := #seed.
+
+            [ label = #location ] whileFalse: [
+                | result |
+                result := self mapScalar: value from: label.
+                value := result fst.
+                label := result snd.
+            ].
+
+            acc ifNil: value ifNotNil: [ acc min: value ].
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer intervals label |
+
+        answer := Vector new.
+        intervals := Vector new.
+
+        1 to: seeds length / 2 do: [ :it |
+            it := it - 1 * 2 + 1.
+            intervals append: (Interval lo: (seeds at: it) hi: (seeds at: it) + (seeds at: it + 1) - 1).
+        ].
+
+        label := #seed.
+        [ label = #location ] whileFalse: [
+            | newLabel |
+            answer := Vector new.
+            intervals do: [ :interval |
+                interval := self mapInterval: interval from: label.
+                answer appendAll: interval fst.
+                newLabel := interval snd.
+            ].
+            answer := self simplifyIntervals: answer asArray.
+            intervals := answer.
+            label := newLabel.
+        ].
+
+        answer := answer inject: nil into: [ :acc :interval |
+            acc ifNil: interval lo ifNotNil: [ acc min: interval lo ].
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

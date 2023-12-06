@@ -108,6 +108,20 @@ Interval = (
 	    ^ self clone.
     )
 
+    do: block = (
+        lo to: hi do: block.
+    )
+
+    find: block = (
+        lo to: hi do: [ :value | (block value: value) ifTrue: [ ^ value ] ].
+        ^ nil.
+    )
+
+    inject: acc into: block = (
+        lo to: hi do: [ :it | acc := block value: acc with: it ].
+        ^ acc.
+    )
+
     hashcode = (
         ^ 524287 * lo hashcode + hi hashcode.
     )

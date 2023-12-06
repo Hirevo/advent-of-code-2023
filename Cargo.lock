@@ -42,6 +42,7 @@ dependencies = [
  "chumsky",
  "color-eyre",
  "geo",
+ "num-traits",
  "pathfinding",
  "rayon",
 ]
