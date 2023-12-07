@@ -2,6 +2,14 @@
 ArrayUtils = (
     ---------
 
+    equals: fst with: snd = (
+        fst length = snd length ifFalse: [ ^ false ].
+        1 to: fst length do: [ :idx |
+            (fst at: idx) = (snd at: idx) ifFalse: [ ^ false ].
+        ].
+        ^ true.
+    )
+
     any: blk in: array = (
         1 to: array length do: [ :idx |
             (blk value: (array at: idx) with: idx) ifTrue: [ ^ true ].

@@ -1,0 +1,93 @@
+Day07Hand = (
+    | cards bid scorePart1 scorePart2 |
+
+    cards = ( ^ cards )
+    bid = ( ^ bid )
+
+    cards: newCards = ( cards := newCards )
+    bid: newBid = ( bid := newBid )
+
+    computeScorePart1 = (
+        | counts |
+        counts := MyHashMap new.
+        cards do: [ :card |
+            card := counts entry: card.
+            card value ifNil: [
+                card value: 1.
+            ] ifNotNil: [
+                card value: card value + 1.
+            ].
+        ].
+
+        counts := counts values.
+        Sorter quicksort: counts with: [ :a :b | b - a ].
+
+        (ArrayUtils equals: counts with: #(5))         ifTrue: [ ^ 7 ]. " Five of a kind "
+        (ArrayUtils equals: counts with: #(4 1))       ifTrue: [ ^ 6 ]. " Four of a kind "
+        (ArrayUtils equals: counts with: #(3 2))       ifTrue: [ ^ 5 ]. " Full house "
+        (ArrayUtils equals: counts with: #(3 1 1))     ifTrue: [ ^ 4 ]. " Three of a kind "
+        (ArrayUtils equals: counts with: #(2 2 1))     ifTrue: [ ^ 3 ]. " Two pairs "
+        (ArrayUtils equals: counts with: #(2 1 1 1))   ifTrue: [ ^ 2 ]. " One pair "
+        (ArrayUtils equals: counts with: #(1 1 1 1 1)) ifTrue: [ ^ 1 ]. " High card "
+
+        ^ nil.
+    )
+
+    scorePart1 = (
+        scorePart1 ifNil: [ scorePart1 := self computeScorePart1 ].
+        ^ scorePart1.
+    )
+
+    computeScorePart2 = (
+        | jokers counts |
+        jokers := 0.
+        counts := MyHashMap new.
+
+        cards do: [ :card |
+            card = #J ifTrue: [
+                jokers := jokers + 1.
+            ] ifFalse: [
+                card := counts entry: card.
+                card value ifNil: [
+                    card value: 1.
+                ] ifNotNil: [
+                    card value: card value + 1.
+                ].
+            ].
+        ].
+
+        counts := counts values.
+
+        Sorter quicksort: counts with: [ :a :b | b - a ].
+        counts length > 0 ifTrue: [
+            counts at: 1 put: (counts at: 1) + jokers.
+        ] ifFalse: [
+            counts := Array new: 1 withAll: jokers.
+        ].
+
+        (ArrayUtils equals: counts with: #(5))         ifTrue: [ ^ 7 ]. " Five of a kind "
+        (ArrayUtils equals: counts with: #(4 1))       ifTrue: [ ^ 6 ]. " Four of a kind "
+        (ArrayUtils equals: counts with: #(3 2))       ifTrue: [ ^ 5 ]. " Full house "
+        (ArrayUtils equals: counts with: #(3 1 1))     ifTrue: [ ^ 4 ]. " Three of a kind "
+        (ArrayUtils equals: counts with: #(2 2 1))     ifTrue: [ ^ 3 ]. " Two pairs "
+        (ArrayUtils equals: counts with: #(2 1 1 1))   ifTrue: [ ^ 2 ]. " One pair "
+        (ArrayUtils equals: counts with: #(1 1 1 1 1)) ifTrue: [ ^ 1 ]. " High card "
+
+        ^ nil.
+    )
+
+    scorePart2 = (
+        scorePart2 ifNil: [ scorePart2 := self computeScorePart2 ].
+        ^ scorePart2.
+    )
+
+    -----------
+
+    cards: cards bid: bid = (
+        | card |
+        card := self new.
+        card cards: cards.
+        card bid: bid.
+        ^ card.
+    )
+)

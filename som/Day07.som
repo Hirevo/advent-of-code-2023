@@ -1,0 +1,86 @@
+Day07 = (
+    | input cardStrengths1 cardStrengths2 |
+
+    setup = (
+        input := system loadFile: 'inputs/day07.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        input := input collect: [ :line |
+            | hand |
+            line := line split: ' '.
+            hand := Day07Hand cards: (line at: 1) bid: (line at: 2) asInteger.
+            line := Array new: hand cards length.
+            1 to: line length do: [ :idx |
+                line at: idx put: (hand cards charAt: idx) asSymbol.
+            ].
+            hand cards: line.
+        ].
+
+        cardStrengths1 := #(#'2' #'3' #'4' #'5' #'6' #'7' #'8' #'9' #T #J #Q #K #A).
+        cardStrengths2 := #(#J #'2' #'3' #'4' #'5' #'6' #'7' #'8' #'9' #T #Q #K #A).
+    )
+
+    comparePart1: fst with: snd = (
+        | fstRank sndRank |
+        fst scorePart1 <> snd scorePart1 ifTrue: [ ^ fst scorePart1 - snd scorePart1 ].
+
+        1 to: (fst cards length min: snd cards length) do: [ :idx |
+            fstRank := fst cards at: idx.
+            fstRank := ArrayUtils findIndex: [ :card :unused | card = fstRank ] in: cardStrengths1.
+            sndRank := snd cards at: idx.
+            sndRank := ArrayUtils findIndex: [ :card :unused | card = sndRank ] in: cardStrengths1.
+            fstRank <> sndRank ifTrue: [ ^ fstRank - sndRank ].
+        ].
+
+        ^ 0.
+    )
+
+    comparePart2: fst with: snd = (
+        | fstRank sndRank |
+        fst scorePart2 <> snd scorePart2 ifTrue: [ ^ fst scorePart2 - snd scorePart2 ].
+
+        1 to: (fst cards length min: snd cards length) do: [ :idx |
+            fstRank := fst cards at: idx.
+            fstRank := ArrayUtils findIndex: [ :card :unused | card = fstRank ] in: cardStrengths2.
+            sndRank := snd cards at: idx.
+            sndRank := ArrayUtils findIndex: [ :card :unused | card = sndRank ] in: cardStrengths2.
+            fstRank <> sndRank ifTrue: [ ^ fstRank - sndRank ].
+        ].
+
+        ^ 0.
+    )
+
+    part1 = (
+        | answer ranks |
+
+        ranks := input copy.
+        Sorter quicksort: ranks with: [ :a :b | self comparePart1: a with: b ].
+
+        answer := 0.
+        1 to: ranks length do: [ :idx | answer := (ranks at: idx) bid * idx + answer ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer ranks |
+
+        ranks := input copy.
+        Sorter quicksort: ranks with: [ :a :b | self comparePart2: a with: b ].
+
+        answer := 0.
+        1 to: ranks length do: [ :idx | answer := (ranks at: idx) bid * idx + answer ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)
