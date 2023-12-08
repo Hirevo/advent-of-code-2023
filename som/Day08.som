@@ -1,0 +1,85 @@
+Day08 = (
+    | instructions nodes start |
+
+    setup = (
+        | input parser |
+        input := system loadFile: 'inputs/day08.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        instructions := (Parser validate: [ :ch | ch = 'R' or: ch = 'L' ]) some
+            map: [ :output | output collect: [ :ch | ch asSymbol ] ].
+
+        nodes := (Parser validate: [ :ch | ch isLetters ]) some
+            map: [ :output | output inject: #'' into: [ :acc :it | acc + it ] ].
+
+        nodes := nodes <* (Parser justAll: ' = ') <*> (
+            (nodes <* (Parser justAll: ', ') <*> nodes)
+                delimitedBy: (Parser just: '(') and: (Parser just: ')')
+        ) separatedBy1: (Parser just: '\n').
+
+        parser := instructions <* (Parser justAll: '\n\n') <*> nodes.
+
+        input := parser apply: (ParseInput new: input).
+        input error ifNil: [
+            instructions := input output fst.
+            nodes := input output snd.
+        ] ifNotNil: [
+            self error: input error.
+        ].
+
+        input := MyHashMap new.
+        nodes do: [ :node | input at: node fst put: node snd ].
+
+        " nodes do: [ :node | input at: node fst put: (GraphNode new: node snd) ]. "
+        " nodes do: [ :node |
+            (input at: node fst) addNeighbor: (input at: node snd fst).
+            (input at: node fst) addNeighbor: (input at: node snd snd).
+        ]. "
+
+        start := (nodes at: 1) fst.
+        nodes := input.
+    )
+
+    pathLengthFrom: start towards: goal = (
+        | steps instruction |
+        steps := 0.
+        [ goal value: start ] whileFalse: [
+            instruction := instructions at: steps % instructions length + 1.
+            instruction = #L ifTrue: [
+                start := (nodes at: start) fst.
+            ] ifFalse: [
+                start := (nodes at: start) snd.
+            ].
+            steps := steps + 1.
+        ].
+        ^ steps.
+    )
+
+    part1 = (
+        | answer current instruction |
+
+        answer := self pathLengthFrom: #AAA towards: [ :node | node = #ZZZ ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer |
+
+        answer := nodes keys inject: 1 into: [ :acc :node |
+            (node endsWith: #A) ifTrue: [
+                Math leastCommonMultiple: acc and: (
+                    self pathLengthFrom: node towards: [ :node | node endsWith: #Z ]
+                )
+            ] ifFalse: acc.
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

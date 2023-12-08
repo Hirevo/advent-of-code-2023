@@ -1,0 +1,19 @@
+Math = (
+    ---------
+
+    greatestCommonDivisor: fst and: snd = (
+        | tmp |
+        [ snd = 0 ] whileFalse: [
+            tmp := snd.
+            snd := fst % snd.
+            fst := tmp.
+        ].
+        ^ fst.
+    )
+
+    leastCommonMultiple: fst and: snd = (
+        ^ (fst * snd) abs / (
+            self greatestCommonDivisor: fst and: snd
+        )
+    )
+)
