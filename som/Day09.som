@@ -1,0 +1,71 @@
+Day09 = (
+    | input |
+
+    setup = (
+        input := system loadFile: 'inputs/day09.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        input := input collect: [ :line |
+            line := line split: ' '.
+            line collect: [ :number | number asInteger ].
+        ].
+    )
+
+    isAllZeroes: sequence = (
+        ^ ArrayUtils all: [ :it :unused | it = 0 ] in: sequence.
+    )
+
+    extrapolateForward: sequence = (
+        | nextSequence |
+        nextSequence := Array new: sequence length - 1.
+        2 to: sequence length do: [ :idx |
+            nextSequence at: idx - 1 put: (
+                (sequence at: idx) - (sequence at: idx - 1)
+            ).
+        ].
+        (self isAllZeroes: nextSequence) ifTrue: [ ^ sequence last ].
+        ^ sequence last + (self extrapolateForward: nextSequence).
+    )
+
+    extrapolateBackward: sequence = (
+        | nextSequence |
+        nextSequence := Array new: sequence length - 1.
+        2 to: sequence length do: [ :idx |
+            nextSequence at: idx - 1 put: (
+                (sequence at: idx) - (sequence at: idx - 1)
+            ).
+        ].
+        (self isAllZeroes: nextSequence) ifTrue: [ ^ sequence first ].
+        ^ sequence first - (self extrapolateBackward: nextSequence).
+    )
+
+    part1 = (
+        | answer |
+
+        answer := input inject: 0 into: [ :acc :sequence |
+            acc + (self extrapolateForward: sequence).
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer |
+
+        answer := input inject: 0 into: [ :acc :sequence |
+            acc + (self extrapolateBackward: sequence).
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)
