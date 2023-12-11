@@ -1,0 +1,175 @@
+Day10 = (
+    | nodes start |
+
+    setup = (
+        | input visited |
+        input := system loadFile: 'inputs/day10.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        nodes := MyHashMap new.
+
+        1 to: input length do: [ :y |
+            | row |
+            row := input at: y.
+            1 to: row length do: [ :x |
+                | coord |
+                coord := Vector2 x: x y: y.
+                nodes at: coord put: MyHashSet new.
+                (row charAt: x) = 'S' ifTrue: [ start := coord ].
+            ].
+        ].
+
+        visited := MyHashSet new.
+        start y > 1 ifTrue: [
+            | other ch |
+            other := Vector2 x: start x y: start y - 1.
+            ch := (input at: other y) charAt: other x.
+            (#('7' 'F' '|') contains: ch) ifTrue: [
+                self link: start to: other in: input seen: visited.
+            ].
+        ].
+        start x > 1 ifTrue: [
+            | other ch |
+            other := Vector2 x: start x - 1 y: start y.
+            ch := (input at: other y) charAt: other x.
+            (#('L' 'F' '-') contains: ch) ifTrue: [
+                self link: start to: other in: input seen: visited.
+            ].
+        ].
+        start y < input length ifTrue: [
+            | other ch |
+            other := Vector2 x: start x y: start y + 1.
+            ch := (input at: other y) charAt: other x.
+            (#('L' 'J' '|') contains: ch) ifTrue: [
+                self link: start to: other in: input seen: visited.
+            ].
+        ].
+        start x < input first length ifTrue: [
+            | other ch |
+            other := Vector2 x: start x + 1 y: start y.
+            ch := (input at: other y) charAt: other x.
+            (#('J' '7' '-') contains: ch) ifTrue: [
+                self link: start to: other in: input seen: visited.
+            ].
+        ].
+
+        nodes retain: [ :entry | entry value size > 0 ].
+    )
+
+    " links the two given nodes and recurses to link the ones after them "
+    link: coord to: other in: input seen: seen = (
+        | ch |
+        (nodes at: coord) insert: other.
+        (nodes at: other) insert: coord.
+        (seen insert: other) ifFalse: [ ^ self ].
+        ch := (input at: other y) charAt: other x.
+        ch = '|' ifTrue: [
+            self link: other to: (Vector2 x: other x y: other y - 1) in: input seen: seen.
+            self link: other to: (Vector2 x: other x y: other y + 1) in: input seen: seen.
+        ] ifFalse: [
+        ch = '-' ifTrue: [
+            self link: other to: (Vector2 x: other x - 1 y: other y) in: input seen: seen.
+            self link: other to: (Vector2 x: other x + 1 y: other y) in: input seen: seen.
+        ] ifFalse: [
+        ch = 'F' ifTrue: [
+            self link: other to: (Vector2 x: other x y: other y + 1) in: input seen: seen.
+            self link: other to: (Vector2 x: other x + 1 y: other y) in: input seen: seen.
+        ] ifFalse: [
+        ch = 'L' ifTrue: [
+            self link: other to: (Vector2 x: other x y: other y - 1) in: input seen: seen.
+            self link: other to: (Vector2 x: other x + 1 y: other y) in: input seen: seen.
+        ] ifFalse: [
+        ch = 'J' ifTrue: [
+            self link: other to: (Vector2 x: other x y: other y - 1) in: input seen: seen.
+            self link: other to: (Vector2 x: other x - 1 y: other y) in: input seen: seen.
+        ] ifFalse: [
+        ch = '7' ifTrue: [
+            self link: other to: (Vector2 x: other x y: other y + 1) in: input seen: seen.
+            self link: other to: (Vector2 x: other x - 1 y: other y) in: input seen: seen.
+        ] ] ] ] ] ].
+    )
+
+    " returns the neighboring vertex that is different from the given one "
+    theOtherOne: set from: coords = (
+        set do: [ :node | node <> coords ifTrue: [ ^ node ] ].
+        ^ nil.
+    )
+
+    " returns the vertices that comprises the main loop as an array and in order "
+    flattenList = (
+        | list current last |
+        list := Vector new.
+        list append: start.
+        last := start.
+        current := (nodes at: start) keys first.
+        [ current = start ] whileFalse: [
+            | temp |
+            list append: current.
+            temp := self theOtherOne: (nodes at: current) from: last.
+            last := current.
+            current := temp.
+        ].
+        ^ list asArray.
+    )
+
+    " returns whether the list of vertices is in counter-clockwise order "
+    isCounterClockwise: list = (
+        | sum |
+        sum := 0.
+        2 to: list length do: [ :idx |
+            sum := (
+                (list at: idx) x - (list at: idx - 1) x
+            ) * (
+                (list at: idx) y + (list at: idx - 1) y
+            ) + sum.
+        ].
+        ^ sum < 0.
+    )
+
+    " computes the polygon's area using the Shoelace algorithm "
+    polygonArea: list = (
+        | s1 s2 |
+        s1 := 0.
+        s2 := 0.
+
+        2 to: list length do: [ :idx |
+            s1 := (list at: idx - 1) x * (list at: idx) y + s1.
+            s2 := (list at: idx - 1) y * (list at: idx) x + s2.
+        ].
+
+        s1 := list last x * list first y + s1.
+        s2 := list first x * list last y + s2.
+
+        ^ (s1 - s2) abs / 2
+    )
+
+    part1 = (
+        | answer |
+
+        answer := nodes size / 2.
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer |
+
+        answer := self flattenList.
+        (self isCounterClockwise: answer) ifFalse: [
+            ArrayUtils reverse: answer.
+        ].
+        answer := (self polygonArea: answer) - (answer length / 2) + 1.
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

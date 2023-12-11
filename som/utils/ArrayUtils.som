@@ -2,6 +2,15 @@
 ArrayUtils = (
     ---------
 
+    reverse: array = (
+        1 to: array length / 2 do: [ :idx |
+            | temp |
+            temp := array at: idx.
+            array at: idx put: (array at: array length + 1 - idx).
+            array at: array length + 1 - idx put: temp.
+        ].
+    )
+
     equals: fst with: snd = (
         fst length = snd length ifFalse: [ ^ false ].
         1 to: fst length do: [ :idx |
