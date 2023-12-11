@@ -1,0 +1,128 @@
+Day11 = (
+    | input |
+
+    setup = (
+        input := system loadFile: 'inputs/day11.txt'.
+        input ifNil: [ self error: 'could not open input file' ].
+
+        input := input split: '\n'.
+        input := input reject: [ :it | it length = 0 ].
+        input := input asArray.
+
+        input := input collect: [ :line |
+            | row |
+            row := Array new: line length.
+            1 to: line length do: [ :idx | row at: idx put: (line charAt: idx) asSymbol ].
+            row.
+        ].
+    )
+
+    " returns the list of y-coordinates of the empty rows "
+    findEmptyRows: grid = (
+        | output |
+        output := Vector new.
+        1 to: input length do: [ :idx |
+            | isEmpty |
+            isEmpty := ArrayUtils all: [ :it :unused | it = #'.' ] in: (input at: idx).
+            isEmpty ifTrue: [ output append: idx ].
+        ].
+        ^ output asArray.
+    )
+
+    " returns the list of x-coordinates of the empty columns "
+    findEmptyCols: grid = (
+        | output |
+        output := Vector new.
+        1 to: input first length do: [ :idx |
+            | isEmpty |
+            isEmpty := true.
+            1 to: input length do: [ :y |
+                ((input at: y) at: idx) = #'#' ifTrue: [
+                    isEmpty := false.
+                ].
+            ].
+            isEmpty ifTrue: [ output append: idx ].
+        ].
+        ^ output asArray.
+    )
+
+    " returns the list of all the galaxies as coordinates "
+    findGalaxies: space = (
+        | output |
+        output := Vector new.
+        1 to: input length do: [ :y |
+            1 to: (input at: y) length do: [ :x |
+                ((input at: y) at: x) = #'#' ifTrue: [
+                    output append: (Vector2 x: x y: y).
+                ].
+            ].
+        ].
+        ^ output asArray.
+    )
+
+    " returns a list of all the unique pairs from the given list "
+    generateUniquePairs: list = (
+        | output |
+        output := Vector new.
+        1 to: list length do: [ :idx |
+            | it1 |
+            it1 := list at: idx.
+            idx + 1 to: list length do: [ :idx |
+                | it2 |
+                it2 := list at: idx.
+                output append: (MyPair fst: it1 snd: it2).
+            ].
+        ].
+        ^ output asArray.
+    )
+
+    part1 = (
+        | answer emptyRows emptyCols |
+
+        emptyRows := self findEmptyRows: input.
+        emptyCols := self findEmptyCols: input.
+
+        answer := self findGalaxies: input.
+        answer := self generateUniquePairs: answer.
+
+        answer := answer inject: 0 into: [ :acc :pair |
+            | deltaX deltaY |
+            deltaX := Interval lo: (pair fst x min: pair snd x) hi: (pair fst x max: pair snd x).
+            deltaY := Interval lo: (pair fst y min: pair snd y) hi: (pair fst y max: pair snd y).
+            deltaX := ArrayUtils count: [ :col :unused | deltaX containsScalar: col ] in: emptyCols.
+            deltaY := ArrayUtils count: [ :row :unused | deltaY containsScalar: row ] in: emptyRows.
+            acc + (pair fst manhattanDistance: pair snd) + deltaX + deltaY.
+        ].
+
+        ('part1: ' + answer) println.
+    )
+
+    part2 = (
+        | answer expansionRate emptyRows emptyCols |
+
+        expansionRate := 1000000 - 1.
+
+        emptyRows := self findEmptyRows: input.
+        emptyCols := self findEmptyCols: input.
+
+        answer := self findGalaxies: input.
+        answer := self generateUniquePairs: answer.
+
+        answer := answer inject: 0 into: [ :acc :pair |
+            | deltaX deltaY |
+            deltaX := Interval lo: (pair fst x min: pair snd x) hi: (pair fst x max: pair snd x).
+            deltaY := Interval lo: (pair fst y min: pair snd y) hi: (pair fst y max: pair snd y).
+            deltaX := ArrayUtils count: [ :col :unused | deltaX containsScalar: col ] in: emptyCols.
+            deltaY := ArrayUtils count: [ :row :unused | deltaY containsScalar: row ] in: emptyRows.
+            acc + (pair fst manhattanDistance: pair snd) + (deltaX * expansionRate) + (deltaY * expansionRate).
+        ].
+
+        ('part2: ' + answer) println.
+    )
+
+    run: args = (
+        self setup.
+        Timing measure: [ self part1 ].
+        Timing measure: [ self part2 ].
+    )
+)

@@ -84,4 +84,14 @@ ArrayUtils = (
 
         ^ nil.
     )
+
+    count: blk in: array = (
+        | count |
+        count := 0.
+        1 to: array length do: [ :idx |
+            (blk value: (array at: idx) with: idx) ifTrue: [ count := count + 1 ].
+        ].
+
+        ^ count.
+    )
 )
